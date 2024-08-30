@@ -41,7 +41,7 @@ namespace FastNoise2.Runtime.NativeTexture
 		public static void Optimise(this NativeReference<float2> bounds)
 		{
 			var (min, max) = (bounds.Value[0], bounds.Value[1]);
-			var scale = max - min;
+			float scale = math.rcp(max - min);
 
 			bounds.Value = new float2(min, scale);
 		}

@@ -19,12 +19,13 @@ namespace FastNoise2.Runtime.NativeTexture
 
 		public int3 Resolution;
 
-		[NativeDisableContainerSafetyRestriction] [NativeDisableParallelForRestriction]
+		[ReadOnly] [NativeDisableUnsafePtrRestriction]
+		readonly IntPtr TexturePtr;
+
+		[NativeDisableContainerSafetyRestriction]
+		internal NativeReference<float2> BoundsRef;
+
 		internal NativeArray<T> RawTextureData;
-
-		internal NativeReference<float2> ValueBounds;
-
-		[NativeDisableUnsafePtrRestriction] internal readonly IntPtr TexturePtr;
 
 		#endregion
 
@@ -82,36 +83,28 @@ namespace FastNoise2.Runtime.NativeTexture
 		/// <summary>
 		/// Create NativeTexture2D From Texture2D.
 		/// </summary>
-		public NativeTexture3D(int3 resolution, Texture2D texture)
+		public NativeTexture3D(int3 resolution, Texture2D texture, Allocator allocator)
 		{
 			Resolution = resolution;
 			TexturePtr = texture.GetNativeTexturePtr();
 			RawTextureData = texture.GetRawTextureData<T>();
-			ValueBounds = new NativeReference<float2>(
+			BoundsRef = new NativeReference<float2>(
 				new float2(float.PositiveInfinity, float.NegativeInfinity),
-				Allocator.Persistent
+				allocator
 			);
 		}
 
 		/// <summary>
 		/// Create NativeTexture3D With Allocator.
 		/// </summary>
-		public NativeTexture3D(int3 resolution, Allocator allocator) : this(resolution,
-			new NativeArray<T>(resolution.x * resolution.y * resolution.z, allocator))
-		{
-		}
-
-		/// <summary>
-		/// Create NativeTexture3D From existing data.
-		/// </summary>
-		public NativeTexture3D(int3 resolution, NativeArray<T> rawTextureData)
+		public NativeTexture3D(int3 resolution, Allocator allocator)
 		{
 			Resolution = resolution;
 			TexturePtr = IntPtr.Zero;
-			RawTextureData = rawTextureData;
-			ValueBounds = new NativeReference<float2>(
+			RawTextureData = new NativeArray<T>(resolution.x * resolution.y * resolution.z, allocator);
+			BoundsRef = new NativeReference<float2>(
 				new float2(float.PositiveInfinity, float.NegativeInfinity),
-				Allocator.Persistent
+				allocator
 			);
 		}
 
@@ -126,7 +119,7 @@ namespace FastNoise2.Runtime.NativeTexture
 
 		public NativeReference<float2> GetBounds()
 		{
-			return ValueBounds;
+			return BoundsRef;
 		}
 
 		[BurstDiscard]

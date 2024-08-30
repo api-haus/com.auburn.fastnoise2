@@ -4,6 +4,7 @@ using System.Runtime.CompilerServices;
 using Unity.Burst;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
+using Unity.Jobs;
 using Unity.Mathematics;
 using UnityEngine;
 
@@ -13,17 +14,16 @@ namespace FastNoise2.Runtime.NativeTexture
 	/// Native Texture2D Wrapper.
 	/// </summary>
 	[DebuggerDisplay("Length = {RawTextureData.m_Length}")]
-	public struct NativeTexture2D<T> : IDisposable where T : unmanaged
+	public struct NativeTexture2D<T> : INativeDisposable where T : unmanaged
 	{
 		#region Fields
 
-		[NativeDisableContainerSafetyRestriction] [NativeDisableParallelForRestriction]
-		internal NativeReference<IntPtr> TexturePtr;
+		[ReadOnly] [NativeDisableUnsafePtrRestriction]
+		readonly IntPtr TexturePtr;
 
-		[NativeDisableContainerSafetyRestriction] [NativeDisableParallelForRestriction]
+		[NativeDisableContainerSafetyRestriction]
 		internal NativeReference<float2> BoundsRef;
 
-		[NativeDisableContainerSafetyRestriction] [NativeDisableParallelForRestriction]
 		internal NativeArray<T> RawTextureData;
 
 		#endregion
@@ -80,34 +80,28 @@ namespace FastNoise2.Runtime.NativeTexture
 		/// <summary>
 		/// Create NativeTexture2D From Texture2D.
 		/// </summary>
-		public NativeTexture2D(Texture2D texture) : this(new int2(texture.width, texture.height), texture)
-		{
-		}
-
-		public NativeTexture2D(int2 resolution, Texture2D texture) : this(resolution, texture.GetRawTextureData<T>())
-		{
-			TexturePtr = new NativeReference<IntPtr>(texture.GetNativeTexturePtr(), Allocator.Persistent);
-		}
-
-		/// <summary>
-		/// Create NativeTexture2D With Allocator.
-		/// </summary>
-		public NativeTexture2D(int2 resolution, Allocator allocator) : this(resolution,
-			new NativeArray<T>(resolution.x * resolution.y, allocator))
-		{
-		}
-
-		/// <summary>
-		/// Create NativeTexture2D From existing data.
-		/// </summary>
-		public NativeTexture2D(int2 resolution, NativeArray<T> rawTextureData)
+		public NativeTexture2D(int2 resolution, Texture2D texture, Allocator allocator)
 		{
 			Resolution = resolution;
-			TexturePtr = new NativeReference<IntPtr>(IntPtr.Zero, Allocator.Persistent);
-			RawTextureData = rawTextureData;
+			TexturePtr = texture.GetNativeTexturePtr();
+			RawTextureData = texture.GetRawTextureData<T>();
 			BoundsRef = new NativeReference<float2>(
 				new float2(float.PositiveInfinity, float.NegativeInfinity),
-				Allocator.Persistent
+				allocator
+			);
+		}
+
+		/// <summary>
+		/// Create NativeTexture2D.
+		/// </summary>
+		public NativeTexture2D(int2 resolution, Allocator allocator)
+		{
+			Resolution = resolution;
+			TexturePtr = IntPtr.Zero;
+			RawTextureData = new NativeArray<T>(resolution.x * resolution.y, allocator);
+			BoundsRef = new NativeReference<float2>(
+				new float2(float.PositiveInfinity, float.NegativeInfinity),
+				allocator
 			);
 		}
 
@@ -128,13 +122,10 @@ namespace FastNoise2.Runtime.NativeTexture
 		[BurstDiscard]
 		public Texture2D ApplyTo(Texture2D texture, bool updateMipmaps = false)
 		{
-			if (texture.GetNativeTexturePtr() != TexturePtr.Value)
+			if (texture.GetNativeTexturePtr() != TexturePtr)
 			{
 				var textureData = RawTextureData;
 				var writeableTextureMemory = texture.GetRawTextureData<T>();
-
-				UnityEngine.Debug.Log(
-					$"t={textureData.Length},w={writeableTextureMemory.Length}, {typeof(T)}, {texture.format}, {texture.graphicsFormat}, {texture.width}x{texture.height}");
 
 				textureData.CopyTo(writeableTextureMemory);
 			}
@@ -184,8 +175,25 @@ namespace FastNoise2.Runtime.NativeTexture
 				RawTextureData.Dispose();
 			if (BoundsRef.IsCreated)
 				BoundsRef.Dispose();
-			if (TexturePtr.IsCreated)
-				TexturePtr.Dispose();
+		}
+
+		[BurstCompile]
+		struct DisposeJob : IJob
+		{
+			public NativeTexture2D<T> Texture;
+
+			public void Execute()
+			{
+				Texture.Dispose();
+			}
+		}
+
+		public JobHandle Dispose(JobHandle inputDeps)
+		{
+			return new DisposeJob
+			{
+				Texture = this,
+			}.Schedule(inputDeps);
 		}
 
 		#endregion

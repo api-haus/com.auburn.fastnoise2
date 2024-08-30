@@ -33,14 +33,14 @@ namespace FastNoise2.Runtime.Bindings
             int xSize, int ySize, int zSize,
             float frequency, int seed)
         {
-            nativeTexture.ValueBounds.Reset();
+            nativeTexture.BoundsRef.Reset();
             fnGenUniformGrid3D(
                 fn.mNodeHandle,
                 nativeTexture.GetRawTextureData().GetUnsafePtr(),
                 xStart, yStart, zStart,
                 xSize, ySize, zSize,
                 frequency, seed,
-                nativeTexture.ValueBounds.GetUnsafePtr()
+                nativeTexture.BoundsRef.GetUnsafePtr()
             );
         }
 
@@ -51,7 +51,7 @@ namespace FastNoise2.Runtime.Bindings
             int xSize, int ySize, int zSize, int wSize,
             float frequency, int seed)
         {
-            nativeTexture.ValueBounds.Reset();
+            nativeTexture.BoundsRef.Reset();
             fnGenUniformGrid4D(
                 fn.mNodeHandle,
                 nativeTexture.GetRawTextureData().GetUnsafePtr(),
@@ -59,7 +59,7 @@ namespace FastNoise2.Runtime.Bindings
                 xSize, ySize, zSize, wSize,
                 frequency,
                 seed,
-                nativeTexture.ValueBounds.GetUnsafePtr()
+                nativeTexture.BoundsRef.GetUnsafePtr()
             );
         }
 
@@ -111,7 +111,7 @@ namespace FastNoise2.Runtime.Bindings
             float xOffset, float yOffset, float zOffset,
             int seed)
         {
-            nativeTexture.ValueBounds.Reset();
+            nativeTexture.BoundsRef.Reset();
             fnGenPositionArray3D(
                 fn.mNodeHandle,
                 nativeTexture.GetRawTextureData().GetUnsafePtr(),
@@ -121,7 +121,7 @@ namespace FastNoise2.Runtime.Bindings
                 zPosArray.GetUnsafePtr(),
                 xOffset, yOffset, zOffset,
                 seed,
-                nativeTexture.ValueBounds.GetUnsafePtr()
+                nativeTexture.BoundsRef.GetUnsafePtr()
             );
         }
 
@@ -136,7 +136,7 @@ namespace FastNoise2.Runtime.Bindings
             float xOffset, float yOffset, float zOffset, float wOffset,
             int seed)
         {
-            nativeTexture.ValueBounds.Reset();
+            nativeTexture.BoundsRef.Reset();
             fnGenPositionArray4D(
                 fn.mNodeHandle,
                 nativeTexture.GetRawTextureData().GetUnsafePtr(),
@@ -147,7 +147,7 @@ namespace FastNoise2.Runtime.Bindings
                 wPosArray.GetUnsafePtr(),
                 xOffset, yOffset, zOffset, wOffset,
                 seed,
-                nativeTexture.ValueBounds.GetUnsafePtr()
+                nativeTexture.BoundsRef.GetUnsafePtr()
             );
         }
     }

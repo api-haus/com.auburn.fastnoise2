@@ -10,12 +10,11 @@ Feature support:
 
 * `NativeTextureXD<T>`
 * Burst/Jobs/IL2CPP compatible FN2 bindings
-* GenNoiseXD Jobs, NormalizeXD Job
-* EditorProperty for FastNoiseGraph Serialized type with integrated NoiseTool support
-
-![serializedNoise.png](.github/docs/serializedNoise.png)
+* EditorProperty for FastNoiseGraph
+* Invoke NoiseTool from Unity
 
 TODO:
 
-* Complete NoiseTool-Unity Integration (send Encoded Noise as NoiseTool launch argument)
-* Documentation, examples. For now see [Tests](./Tests) for usage
+* Complete NoiseTool noise graphs Unity editor integration.
+* Complete FastNoise2 JobSystem preset API
+* Documentation, examples. See [Tests](./Tests) for usage examples.

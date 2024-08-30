@@ -10,12 +10,12 @@ namespace FastNoise2.Runtime.Jobs._2D
 	[BurstCompile]
 	public struct GenUniformGrid2DJob : IJob
 	{
-		[NativeDisableUnsafePtrRestriction] public NativeTexture2D<float> Texture;
-		[NativeDisableUnsafePtrRestriction] public FastNoise Noise;
+		public NativeTexture2D<float> Texture;
+		public FastNoise Noise;
 
+		public int Seed;
 		public int2 Offset;
 		public float Frequency;
-		public int Seed;
 
 		public void Execute()
 		{

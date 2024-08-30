@@ -1,6 +1,7 @@
 using System.Runtime.CompilerServices;
 using FastNoise2.Runtime.NativeTexture;
 using Unity.Burst;
+using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
 using Unity.Jobs;
 using Unity.Mathematics;
@@ -13,26 +14,29 @@ namespace FastNoise2.Runtime.Jobs._2D
 		[BurstCompile]
 		public struct OptimiseBoundsJob : IJob
 		{
-			[NativeDisableUnsafePtrRestriction] public NativeTexture2D<float> Texture;
+			public NativeReference<float2> Bounds;
 
 			public void Execute()
 			{
-				Texture.BoundsRef.Optimise();
+				Bounds.Optimise();
 			}
 		}
 
 		[BurstCompile]
 		struct ResetBoundsJob : IJob
 		{
-			[NativeDisableUnsafePtrRestriction] public NativeTexture2D<float> Texture;
+			[WriteOnly] public NativeReference<float2> Bounds;
 
 			public void Execute()
 			{
-				Texture.BoundsRef.Value = new float2(0, 1);
+				Bounds.Value = new float2(float.PositiveInfinity, float.NegativeInfinity);
 			}
 		}
 
-		[NativeDisableUnsafePtrRestriction] public NativeTexture2D<float> Texture;
+		[NativeDisableParallelForRestriction] public NativeArray<float> Texture;
+
+		[NativeDisableParallelForRestriction] [ReadOnly]
+		public NativeReference<float2> Bounds;
 
 		[BurstCompile]
 		public void Execute(int i)
@@ -43,29 +47,30 @@ namespace FastNoise2.Runtime.Jobs._2D
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public float ReadPixelNormalized(int i)
 		{
-			return Texture.BoundsRef.NormalizeToBounds(Texture[i]);
+			return Bounds.NormalizeToBounds(Texture[i]);
 		}
 
 		public static JobHandle Schedule(
 			NativeTexture2D<float> noiseDataNoiseOut,
 			JobHandle dependency)
 		{
-			var optimiseJob = new OptimiseBoundsJob
+			dependency = new OptimiseBoundsJob
 			{
-				Texture = noiseDataNoiseOut,
+				Bounds = noiseDataNoiseOut.BoundsRef,
 			}.Schedule(dependency);
 
-			var normalizeJob = new NormalizeTexture2DJob
+			dependency = new NormalizeTexture2DJob
 			{
-				Texture = noiseDataNoiseOut,
-			}.Schedule(noiseDataNoiseOut.Length, noiseDataNoiseOut.Width, optimiseJob);
+				Texture = noiseDataNoiseOut.GetRawTextureData(),
+				Bounds = noiseDataNoiseOut.BoundsRef,
+			}.Schedule(noiseDataNoiseOut.Length, noiseDataNoiseOut.Width, dependency);
 
-			var resetJob = new ResetBoundsJob
+			dependency = new ResetBoundsJob
 			{
-				Texture = noiseDataNoiseOut,
-			}.Schedule(normalizeJob);
+				Bounds = noiseDataNoiseOut.BoundsRef,
+			}.Schedule(dependency);
 
-			return resetJob;
+			return dependency;
 		}
 	}
 }

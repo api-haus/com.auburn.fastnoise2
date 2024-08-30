@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using Unity.Collections.LowLevel.Unsafe;
 using Unity.Mathematics;
 
 namespace FastNoise2.Runtime.Bindings
@@ -228,7 +229,8 @@ namespace FastNoise2.Runtime.Bindings
             float frequency, int seed)
         {
             float[] minMax = new float[2];
-            fnGenUniformGrid3D(mNodeHandle, noiseOut, xStart, yStart, zStart, xSize, ySize, zSize, frequency, seed, minMax);
+            fnGenUniformGrid3D(mNodeHandle, noiseOut, xStart, yStart, zStart, xSize, ySize, zSize, frequency, seed,
+                minMax);
             return new OutputMinMax(minMax);
         }
 
@@ -238,7 +240,8 @@ namespace FastNoise2.Runtime.Bindings
             float frequency, int seed)
         {
             float[] minMax = new float[2];
-            fnGenUniformGrid4D(mNodeHandle, noiseOut, xStart, yStart, zStart, wStart, xSize, ySize, zSize, wSize, frequency,
+            fnGenUniformGrid4D(mNodeHandle, noiseOut, xStart, yStart, zStart, wStart, xSize, ySize, zSize, wSize,
+                frequency,
                 seed, minMax);
             return new OutputMinMax(minMax);
         }
@@ -269,7 +272,8 @@ namespace FastNoise2.Runtime.Bindings
             int seed)
         {
             float[] minMax = new float[2];
-            fnGenPositionArray3D(mNodeHandle, noiseOut, xPosArray.Length, xPosArray, yPosArray, zPosArray, xOffset, yOffset,
+            fnGenPositionArray3D(mNodeHandle, noiseOut, xPosArray.Length, xPosArray, yPosArray, zPosArray, xOffset,
+                yOffset,
                 zOffset, seed, minMax);
             return new OutputMinMax(minMax);
         }
@@ -301,7 +305,7 @@ namespace FastNoise2.Runtime.Bindings
             return fnGenSingle4D(mNodeHandle, x, y, z, w, seed);
         }
 
-        internal IntPtr mNodeHandle;
+        [NativeDisableUnsafePtrRestriction] internal IntPtr mNodeHandle;
         private int mMetadataId;
 
         public class Metadata
@@ -348,7 +352,8 @@ namespace FastNoise2.Runtime.Bindings
                 int variableCount = fnGetMetadataVariableCount(id);
                 int nodeLookupCount = fnGetMetadataNodeLookupCount(id);
                 int hybridCount = fnGetMetadataHybridCount(id);
-                metadata.members = new Dictionary<string, Metadata.Member>(variableCount + nodeLookupCount + hybridCount);
+                metadata.members =
+                    new Dictionary<string, Metadata.Member>(variableCount + nodeLookupCount + hybridCount);
 
                 // Init variables
                 for (int variableIdx = 0; variableIdx < variableCount; variableIdx++)
@@ -359,7 +364,8 @@ namespace FastNoise2.Runtime.Bindings
                     member.type = (Metadata.Member.Type)fnGetMetadataVariableType(id, variableIdx);
                     member.index = variableIdx;
 
-                    member.name = FormatDimensionMember(member.name, fnGetMetadataVariableDimensionIdx(id, variableIdx));
+                    member.name =
+                        FormatDimensionMember(member.name, fnGetMetadataVariableDimensionIdx(id, variableIdx));
 
                     // Get enum names
                     if (member.type == Metadata.Member.Type.Enum)
@@ -616,7 +622,8 @@ namespace FastNoise2.Runtime.Bindings
         internal static extern int fnGetMetadataHybridDimensionIdx(int id, int nodeLookupIndex);
 
         [DllImport(NATIVE_LIB)]
-        internal static extern bool fnSetHybridNodeLookup(IntPtr nodeHandle, int nodeLookupIndex, IntPtr nodeLookupHandle);
+        internal static extern bool fnSetHybridNodeLookup(IntPtr nodeHandle, int nodeLookupIndex,
+            IntPtr nodeLookupHandle);
 
         [DllImport(NATIVE_LIB)]
         internal static extern bool fnSetHybridFloat(IntPtr nodeHandle, int nodeLookupIndex, float value);
