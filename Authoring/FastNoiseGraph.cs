@@ -17,12 +17,7 @@ namespace FastNoise2.Authoring
 		public FixedString512Bytes Fixed512 => new(encodedGraph);
 		public FixedString4096Bytes Fixed4096 => new(encodedGraph);
 
-		[SerializeField] string encodedGraph;
-
-		FastNoiseGraph(string encodedGraph)
-		{
-			this.encodedGraph = encodedGraph;
-		}
+		[SerializeField] string encodedGraph = "DQAFAAAAAAAAQAgAAAAAAD8AAAAAAA==";
 
 		public string EncodedValue => encodedGraph;
 
@@ -38,7 +33,7 @@ namespace FastNoise2.Authoring
 
 		public static implicit operator FastNoiseGraph(string encodedGraph)
 		{
-			return new FastNoiseGraph(encodedGraph);
+			return new FastNoiseGraph { encodedGraph = encodedGraph };
 		}
 
 		public override string ToString()
@@ -51,6 +46,7 @@ namespace FastNoise2.Authoring
 	{
 		public static FastNoise Instantiate(this FastNoiseGraph graph)
 		{
+			Debug.Assert(!string.IsNullOrWhiteSpace(graph.EncodedValue), nameof(graph.EncodedValue));
 			var noise = FastNoise.FromEncodedNodeTree(graph.EncodedValue);
 
 			return noise;
