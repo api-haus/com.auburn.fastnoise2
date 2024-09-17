@@ -438,21 +438,13 @@ namespace FastNoise2.Runtime.Bindings
         private static Dictionary<string, int> metadataNameLookup;
         private static Metadata[] nodeMetadata;
 
-#if UNITY_EDITOR_OSX || UNITY_STANDALONE_OSX || UNITY_EDITOR_LINUX || UNITY_EMBEDDED_LINUX || UNITY_STANDALONE_LINUX || UNITY_ANDROID
+#if UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN || UNITY_EDITOR_OSX || UNITY_STANDALONE_OSX || UNITY_EDITOR_LINUX || UNITY_EMBEDDED_LINUX || UNITY_STANDALONE_LINUX || UNITY_ANDROID
         private const string NATIVE_LIB = "FastNoise";
-#endif
-
-#if UNITY_IOS
-    // On iOS plugins are statically linked into
-    // the executable, so we have to use __Internal as the
-    // library name.
-    private const string NATIVE_LIB = "__Internal";
-#endif
-
-#if UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN
-    // Other platforms load plugins dynamically, so pass the
-    // name of the plugin's dynamic library.
-    private const string NATIVE_LIB = "FastNoise";
+#elif UNITY_IOS
+        // On iOS plugins are statically linked into
+        // the executable, so we have to use __Internal as the
+        // library name.
+        private const string NATIVE_LIB = "__Internal";
 #endif
 
 
